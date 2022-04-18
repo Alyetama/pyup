@@ -1,14 +1,14 @@
-# Caddy Fileserver
+# pyup
 
 ## Install
 
-```shell
+```
 pip install pyup
 ```
 
 ## Getting started
 
-```shell
+```
 mv .env.example .env
 nano .env  # or any other text editor
 docker-compose up -d
@@ -16,7 +16,7 @@ docker-compose up -d
 
 - Configure `pyup`:
 
-```shell
+```
 pyup --configure
 ```
 
@@ -29,7 +29,7 @@ usage: pyup [-h] [-d DOMAIN_NAME] [-k] [--overwrite] [-l] [--no-notifications]
             [files ...]
 
 positional arguments:
-  files                 Path of files to upload
+  files                 Files to upload
 
 optional arguments:
   -h, --help            show this help message and exit

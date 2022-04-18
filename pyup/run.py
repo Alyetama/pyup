@@ -56,7 +56,7 @@ def opts():
     parser.add_argument('--save-logs',
                         help='Save logs to a file',
                         action='store_true')
-    parser.add_argument('files', nargs='*', help='Path of files to upload')
+    parser.add_argument('files', nargs='*', help='Files to upload')
     return parser.parse_args()
 
 
