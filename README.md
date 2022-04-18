@@ -1,7 +1,5 @@
 # Caddy Fileserver
 
----
-
 ## Install
 
 ```shell
@@ -21,8 +19,6 @@ docker-compose up -d
 ```shell
 pyup --configure
 ```
-
----
 
 ## Basic Usage
 

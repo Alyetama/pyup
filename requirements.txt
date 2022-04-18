@@ -1,0 +1,7 @@
+paramiko~=2.10.2
+pymongo[srv]~=4.0.2
+pyperclip~=1.8.2
+PyYAML~=6.0
+loguru~=0.5.3
+tqdm~=4.62.3
+rich~=10.11.0
