@@ -217,8 +217,6 @@ class PyUp:
             console.print(f'\nConfiguration file location: "{cfg_file}"')
             sys.exit(0)
 
-        # loaded_config = dict(
-        #     sum([list(x[next(iter(x))].items()) for x in cfg], []))
         loaded_config = cfg[0]['options']
         os.environ.update(loaded_config)
 
@@ -232,6 +230,9 @@ class PyUp:
             server_client = self.create_server_client()
         else:
             server_client = None
+
+        if isinstance(self.files, str):
+            self.files = [self.files]
 
         if self.parallel:
             with concurrent.futures.ThreadPoolExecutor() as executor:
