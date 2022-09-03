@@ -4,7 +4,6 @@
 import concurrent.futures
 import datetime
 import ipaddress
-import json
 import mimetypes
 import os
 import platform
@@ -20,21 +19,9 @@ from pathlib import Path
 import paramiko
 import pymongo
 import pyperclip
-import yaml
 from loguru import logger
-from rich import print_json
 from rich.console import Console
 from rich.table import Table
-
-
-class _PymongoErrors:
-
-    def __init__(self):
-        self.errors = pymongo.errors
-
-    def __iter__(self):
-        return (v for k, v in vars(pymongo.errors).items()
-                if not k.startswith('_'))
 
 
 class PyUp:
@@ -80,11 +67,15 @@ class PyUp:
     @staticmethod
     def notification(title, subtitle=None, message=None):
         notifier_bin = shutil.which('terminal-notifier')
-        subprocess.run(
-            shlex.split(f'{notifier_bin} -title \"{title}\" '
-                        f'-subtitle \"{subtitle}\" -message \"{message}\"'))
+        if notifier_bin:
+            subprocess.run(
+                shlex.split(
+                    f'{notifier_bin} -title \"{title}\" '
+                    f'-subtitle \"{subtitle}\" -message \"{message}\"'))
 
     def check_host(self):
+        if not os.getenv('FILSERVER_HOST'):
+            return
         exit_code = os.system(f'ping -c 1 -W 1 {os.environ["FILSERVER_HOST"]} '
                               '> /dev/null 2>&1')
         if exit_code != 0:
@@ -106,14 +97,19 @@ class PyUp:
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         client.connect(os.environ['FILSERVER_HOST'],
-                       username=os.environ['FILSERVER_USERNAME'])
+                       username=os.environ['FILSERVER_USERNAME'],
+                       key_filename=os.getenv('SSH_PRIVATE_KEY_PATH'))
         return client
 
     @staticmethod
     def create_mongodb_client():
-        mongodb_connection_string = os.getenv('MONGODB_CONNECTION_STRING')
-        if mongodb_connection_string:
-            client = pymongo.MongoClient(mongodb_connection_string,
+        username = os.getenv('MONGODB_USERNAME')
+        password = os.getenv('MONGODB_PASSWORD')
+        host = os.getenv('MONGODB_HOST')
+        port = os.getenv('MONGODB_PORT')
+        if all(x for x in [username, password, host, port]):
+            mongodb_con_str = f'mongodb://{username}:{password}@{host}:{port}'
+            client = pymongo.MongoClient(mongodb_con_str,
                                          serverSelectionTimeoutMS=2000)
         else:
             logger.warning('No database configured...')
@@ -122,15 +118,14 @@ class PyUp:
 
     def mongodb_insert(self, db, file_data):
         try:
-            res = db.files.insert_one(file_data)
+            return db.files.insert_one(file_data)
         except pymongo.errors.ServerSelectionTimeoutError:
             logger.error('MongoDB timed out!')
         except pymongo.errors.OperationFailure:
             logger.error('Failed to inset the record due to an authentication '
                          'error! Check your MongoDB username/password!')
-        except tuple(_PymongoErrors().__iter__()) as e:
+        except Exception as e:
             logger.exception(e)
-        return res
 
     def upload(self, file, db, server_client):
         start = time.time()
@@ -148,17 +143,26 @@ class PyUp:
             out_filename = f'{id_}{Path(file).suffix}'
 
         logger.debug(f'📤 Uploading "{file}" with id "{id_}" ...')
-        file_dest = f'{os.environ["FILESERVER_DATA_PATH"]}/{out_filename}'
+        file_dest = str(
+            Path(f'{os.environ["FILESERVER_DATA_PATH"]}/{out_filename}').
+            absolute())
         if self.is_remote():
             sftp = server_client.open_sftp()
             sftp.put(file, file_dest)
         else:
             shutil.copy(file, file_dest)
 
+        fs_host = os.getenv('FILESERVER_PORT')
+        fs_port = os.getenv('FILESERVER_PORT')
+
         if self.domain_name:
             url = f'https://{self.domain_name}/{out_filename}'
+        elif os.getenv('DEFAULT_DOMAIN_NAME'):
+            url = f'https://{os.environ["DEFAULT_DOMAIN_NAME"]}/{out_filename}'
+        elif fs_host:
+            url = f'http://{fs_host}:{fs_port}/{out_filename}'
         else:
-            url = f'https://{os.getenv("DEFAULT_DOMAIN_NAME")}/{out_filename}'
+            url = f'http://127.0.0.1:{fs_port}/{out_filename}'
         logger.debug(f'✅ File was uploaded successfully!')
         logger.opt(colors=True).info(f'"{file}" -> 🚀 <E>{url}</E>')
 
@@ -183,8 +187,8 @@ class PyUp:
         if 'macOS' in platform.platform():
             try:
                 self.notification('Upload complete!',
-                                 f'Took {round(time.time() - start, 2)}s',
-                                 file_data['url'])
+                                  f'Took {round(time.time() - start, 2)}s',
+                                  file_data['url'])
             except FileNotFoundError:
                 logger.warning('Install terminal-notifier for notifications! '
                                '(optional)\n$ brew install terminal-notifier')
@@ -200,26 +204,8 @@ class PyUp:
             sftp.close()
         return file, file_data['url']
 
-    def main(self):
+    def run(self):
         console = Console()
-
-        cfg_file = f'{Path().home()}/.pyup'
-        if not Path(cfg_file).exists():
-            raise FileNotFoundError(
-                f'Could not find a configuration file at: "{cfg_file}"!\n'
-                '-> Run `pyup --configure` to create one')
-
-        with open(cfg_file) as f:
-            cfg = yaml.load(f, Loader=yaml.FullLoader)
-
-        if self.show_config:
-            print_json(json.dumps(cfg, indent=4))
-            console.print(f'\nConfiguration file location: "{cfg_file}"')
-            sys.exit(0)
-
-        loaded_config = cfg[0]['options']
-        os.environ.update(loaded_config)
-
         logger = self.get_logger()
 
         start = time.time()
@@ -265,6 +251,3 @@ class PyUp:
         console.print(table)
 
         return results
-
-    if __name__ == '__main__':
-        main()

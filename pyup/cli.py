@@ -1,10 +1,12 @@
+#!/usr/bin/env python
+# coding: utf-8
+
 import argparse
 import signal
 import sys
 
 from loguru import logger
 
-from .configure import write_configuration
 from .pyup import PyUp
 
 
@@ -47,12 +49,6 @@ def opts():
                         '--parallel',
                         action='store_true',
                         help='Upload files in parallel')
-    parser.add_argument('--show-config',
-                        action='store_true',
-                        help='Show the current configuration and exit')
-    parser.add_argument('--configure',
-                        action='store_true',
-                        help='Configure pyup')
     parser.add_argument('--save-logs',
                         help='Save logs to a file',
                         action='store_true')
@@ -61,10 +57,8 @@ def opts():
 
 
 def main():
+    signal.signal(signal.SIGINT, keyboard_interrupt_handler)
     args = opts()
-
-    if args.configure:
-        write_configuration()
 
     pyup = PyUp(args.files,
                 domain_name=args.domain_name,
@@ -74,11 +68,9 @@ def main():
                 no_notifications=args.no_notifications,
                 verbosity_level=args.verbosity_level,
                 parallel=args.parallel,
-                show_config=args.show_config,
                 save_logs=args.save_logs)
-    pyup.main()
+    pyup.run()
 
 
 if __name__ == '__main__':
-    signal.signal(signal.SIGINT, keyboard_interrupt_handler)
     main()

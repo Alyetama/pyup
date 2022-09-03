@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyup"
-version = "0.1.1"
+version = "0.1.2"
 description = "Caddy file server in Python with many additional features!"
 authors = ["Alyetama <malyetama@pm.me>"]
 readme = "README.md"
@@ -23,4 +23,4 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-pyup = "pyup:run.main"
+pyup = "pyup:cli.main"
