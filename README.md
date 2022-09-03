@@ -1,23 +1,29 @@
 # pyup
 
-## Install
+# Getting Started
 
-```
-pip install pyup
+- On the server host machine:
+
+1. Clone the repo:
+
+```shell
+git clone https://github.com/Alyetama/pyup.git
 ```
 
-## Getting started
+2. Rename and update `.env`:
 
-```
+```shell
 mv .env.example .env
 nano .env  # or any other text editor
 docker-compose up -d
 ```
 
-- Configure `pyup`:
+## Install
 
-```
-pyup --configure
+- Copy the `.env` file from the host to the client machine (where you will upload from), then, run:
+
+```shell
+pip install pyup
 ```
 
 ## Basic Usage
