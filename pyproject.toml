@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyup"
-version = "0.1.2"
+version = "0.1.3"
 description = "Caddy file server in Python with many additional features!"
 authors = ["Alyetama <malyetama@pm.me>"]
 readme = "README.md"
