@@ -15,6 +15,12 @@ git clone https://github.com/Alyetama/pyup.git
 ```shell
 mv .env.example .env
 nano .env  # or any other text editor
+```
+
+3. Create a docker volume, then run the container:
+
+```shell
+docker volume create fileserver_mongodb_volume
 docker-compose up -d
 ```
 

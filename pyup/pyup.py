@@ -3,6 +3,7 @@
 
 import concurrent.futures
 import datetime
+import hashlib
 import ipaddress
 import mimetypes
 import os
@@ -60,7 +61,14 @@ class PyUp:
         else:
             level = self.verbosity_level * 10
         logger.remove()
-        logger.add(sys.stderr, level=level)
+        logger.add(
+            sys.stderr,
+            format='{level.icon} <fg #3bd6c6>{time:HH:mm:ss}</fg #3bd6c6> | '
+            '<level>{level: <8}</level> | '
+            '<fg #f1fa8c>ln:{line: <4}</fg #f1fa8c> - <lvl>{message}</lvl>',
+            level=level)
+        logger.level('WARNING', color='<yellow><bold>', icon='🚧')
+        logger.level('INFO', color='<bold>', icon='🚀')
         if self.save_logs:
             logger.add('pyup.log', level=level)
         return logger
@@ -115,7 +123,7 @@ class PyUp:
         else:
             logger.warning('No database configured...')
             return
-        return client.caddy_fileserver_db
+        return client.fileserver_db
 
     def mongodb_insert(self, db, file_data):
         try:
@@ -165,10 +173,11 @@ class PyUp:
         else:
             url = f'http://127.0.0.1:{fs_port}/{out_filename}'
         logger.debug(f'✅ File was uploaded successfully!')
-        logger.opt(colors=True).info(f'"{file}" -> 🚀 <E>{url}</E>')
+        logger.info(f'"{file}" -> 🚀 \033[32m{url}\033[39m')
 
         file_data = {
             '_id': id_,
+            'md5_checksum': hashlib.md5(Path(file).read_bytes()).hexdigest(),
             'created_at': time.ctime(Path(file).stat().st_ctime),
             'original_file_name': Path(file).name,
             'url_file_name': Path(out_filename).name,
