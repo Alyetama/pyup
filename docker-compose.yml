@@ -19,6 +19,8 @@ services:
     environment:
       MONGODB_USERNAME: ${MONGODB_USERNAME:-admin}
       MONGODB_PASSWORD: ${MONGODB_PASSWORD:-password}
+    volumes:
+      - ${MONGODB_DATA_PATH:-./db}:/data/db
 
   mongo-express:
     image: mongo-express

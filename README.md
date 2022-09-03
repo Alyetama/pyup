@@ -18,9 +18,13 @@ nano .env  # or any other text editor
 docker-compose up -d
 ```
 
-## Install
+- Copy the `.env` file from the server host to the client machine (where you will upload from), then, run:
 
-- Copy the `.env` file from the host to the client machine (where you will upload from), then, run:
+```shell
+mv .env ~/.pyup
+```
+
+## Install
 
 ```shell
 pip install pyup

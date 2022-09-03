@@ -19,6 +19,7 @@ from pathlib import Path
 import paramiko
 import pymongo
 import pyperclip
+from dotenv import load_dotenv
 from loguru import logger
 from rich.console import Console
 from rich.table import Table
@@ -205,6 +206,7 @@ class PyUp:
         return file, file_data['url']
 
     def run(self):
+        load_dotenv(Path.home() / '.pyup')
         console = Console()
         logger = self.get_logger()
 
