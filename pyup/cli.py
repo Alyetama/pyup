@@ -4,7 +4,9 @@
 import argparse
 import signal
 import sys
+from pathlib import Path
 
+from dotenv import load_dotenv
 from loguru import logger
 
 from .pyup import PyUp
@@ -58,6 +60,12 @@ def opts():
 
 def main():
     signal.signal(signal.SIGINT, keyboard_interrupt_handler)
+    env_file = Path.home() / '.pyup'
+    if not env_file.exists():
+        logger.error(f'Could not find the configuration file: `{env_file}`!')
+        sys.exit(1)
+    load_dotenv(env_file)
+
     args = opts()
 
     pyup = PyUp(args.files,

@@ -52,7 +52,7 @@ class PyUp:
 
     @staticmethod
     def is_remote():
-        if os.getenv('FILSERVER_HOST') and os.getenv('FILSERVER_USERNAME'):
+        if os.getenv('IS_SERVER') == 'true':
             return True
 
     def get_logger(self):
@@ -93,7 +93,13 @@ class PyUp:
             sys.exit(1)
 
         host = socket.gethostname()
-        local_ip = ipaddress.ip_address(socket.gethostbyname(host))
+        try:
+            local_ip = ipaddress.ip_address(socket.gethostbyname(host))
+        except socket.gaierror as e:
+            logger.error(e)
+            logger.error('Using `127.0.0.1` to check...')
+            local_ip = '127.0.0.1'
+
         logger.debug(f'📥 Received a request from `{host}`')
         subnet = ipaddress.ip_network(f'{local_ip}/255.255.255.0',
                                       strict=False)
@@ -105,9 +111,13 @@ class PyUp:
     def create_server_client():
         client = paramiko.SSHClient()
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        if os.getenv('SSH_PRIVATE_KEY_PATH'):
+            kwargs = {'key_filename': os.getenv('SSH_PRIVATE_KEY_PATH')}
+        else:
+            kwargs = {}
         client.connect(os.environ['FILSERVER_HOST'],
                        username=os.environ['FILSERVER_USERNAME'],
-                       key_filename=os.getenv('SSH_PRIVATE_KEY_PATH'))
+                       **kwargs)
         return client
 
     @staticmethod
@@ -161,7 +171,7 @@ class PyUp:
         else:
             shutil.copy(file, file_dest)
 
-        fs_host = os.getenv('FILESERVER_PORT')
+        fs_host = os.getenv('FILSERVER_HOST')
         fs_port = os.getenv('FILESERVER_PORT')
 
         if self.domain_name:
