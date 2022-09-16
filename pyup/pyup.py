@@ -96,11 +96,9 @@ class PyUp:
         try:
             local_ip = ipaddress.ip_address(socket.gethostbyname(host))
         except socket.gaierror as e:
-            logger.error(e)
-            logger.error('Using `127.0.0.1` to check...')
             local_ip = '127.0.0.1'
 
-        logger.debug(f'📥 Received a request from `{host}`')
+        logger.debug(f'📥 Received a request from `{host}` ({local_ip})')
         subnet = ipaddress.ip_network(f'{local_ip}/255.255.255.0',
                                       strict=False)
         if self.local_only and local_ip not in subnet:
